@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+</head>
+<style>
+    body {
+        background-color: #E0F7FA;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .gmap_canvas {
+        overflow: hidden;
+        background: none !important;
+        height: 350px;
+        width: 600px;
+    }
+
+    #nav {
+        display: flex;
+        justify-content: space-between;
+        width: 80%;
+        margin: auto;
+        align-items: center;
+        padding: 20px;
+        font-size: 20px;
+    }
+
+    #nav>div:nth-child(1) {
+        width: 60%;
+    }
+
+    #nav>div>input {
+        padding: 10px;
+        border: none;
+        width: 50%;
+        font-size: 20px;
+        border-radius: 10px;
+    }
+
+    #nav>div>button {
+        padding: 10px;
+        border: none;
+        width: 20%;
+        background-color: #8D6E63;
+        font-size: 20px;
+        border-radius: 10px;
+    }
+
+    #nav>div:nth-child(3) {
+        width: 20%;
+        background-color: #26A69A;
+        color: white;
+        font-size: 25px;
+        text-align: center;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    #data {
+        display: flex;
+        justify-content: space-between;
+        margin: auto;
+        align-items: center;
+        width: 80%;
+        height: 500px;
+        padding: 20px;
+        background-color: white;
+        box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;
+    }
+
+    #weather {
+        padding: 20px;
+        font-size: 20px;
+    }
+
+    #weather>h3:nth-child(1) {
+        color: red;
+    }
+
+    #weather>h1 {
+        text-align: center;
+    }
+
+    #current{
+        height: 40px;
+    }
+</style>
+
+<body>
+    <div id="nav">
+        <div> <input type="text" id="search"> <button class="search">Search</button> </div>
+        <div> <img id="current" src="https://imgs.search.brave.com/MGC8SJ5BSlxmJnd95DgVWsuf9Td5zCkmXwmznjpai8c/rs:fit:474:225:1/g:ce/aHR0cHM6Ly90c2Uy/Lm1tLmJpbmcubmV0/L3RoP2lkPU9JUC5i/clhQSXM5R29nNUlN/Z2dZZTl6dkpBSGFI/YSZwaWQ9QXBp" alt="navigation"></div>
+        <div> Metric &deg; C , m/s</div>
+    </div>
+
+    <div id="data">
+        <div id="weather">
+
+        </div>
+        <div class="gmap_canvas"><iframe width="600" height="500" id="gmap_canvas"
+                src="https://maps.google.com/maps?q=India&t=&z=13&ie=UTF8&iwloc=&output=embed" frameborder="0"
+                scrolling="no" marginheight="0" marginwidth="0"></iframe><a href="https://putlocker-is.org"></a><br>
+        </div>
+    </div>
+</body>
+
+</html>
+
+<script>
+    let weather = document.querySelector("#weather")
+
+    document.querySelector(".search").addEventListener("click", function () {
+        let val = document.querySelector("#search").value
+        google(val)
+        Weather(val)
+    })
+
+    function google(val) {
+        let map = document.querySelector("#gmap_canvas")
+        map.src = "https://maps.google.com/maps?q=" + val + "&t=&z=13&ie=UTF8&iwloc=&output=embed"
+
+    }
+
+    function Weather(val) {
+            let url = "https://api.openweathermap.org/data/2.5/find?q=" + val + "&units=metric&type=accurate&mode=html&APPID=f084515fa40411d2b53388eeb442a951"
+        fetch(url)
+            .then(function (resp) { return resp.json() })
+            .then(function (data) {
+                display(data.list);
+            })
+            .catch(function (rej) {
+                console.log(rej)
+            });
+        }
+
+
+    function display(data) {
+        weather.innerHTML = null;
+        let id = "";
+        data.forEach(function (ele) {
+            if (id == "") {
+                id = ele.id
+            }
+            if (id == ele.id) {
+                let time = new Date();
+                var today = time.getHours() + ":" + time.getMinutes();
+                var date = time.toDateString()
+                let dat = document.createElement("h3");
+                dat.innerHTML = today + " " + date;
+                let place = document.createElement("h1")
+                place.innerHTML = ele.name
+                google(place.innerText)
+                let temp = document.createElement("h1")
+                temp.innerHTML = parseInt(ele.main.temp) + "&deg"
+                let feel = document.createElement("h2")
+                feel.innerHTML = "Feels like " + parseInt(ele.main.feels_like) + "&deg" + "." + " " + ele.weather[0].description
+                let wind = document.createElement("h3")
+                wind.innerHTML = "Wind Speed : " + ele.wind.speed
+                let humidity = document.createElement("h3")
+                humidity.innerHTML = "Humidity : " + ele.main.humidity
+                weather.append(dat, place, temp, feel, wind, humidity)
+            }
+        });
+    }
+
+    function success(pos) {
+        const crd = pos.coords;
+        let lat = crd.latitude
+        let lon = crd.longitude
+        LatLon(lat ,lon)
+    }
+
+    function error(err) {
+        console.warn(`ERROR(${err.code}): ${err.message}`);
+    }
+
+    document.querySelector("#current").addEventListener("click", function () {
+        navigator.geolocation.getCurrentPosition(success, error);
+    })
+
+    function LatLon(lat,lon){
+            let url = "https://api.openweathermap.org/data/2.5/find?lat=" + lat +"&lon=" +lon+ "&units=metric&type=accurate&mode=html&APPID=f084515fa40411d2b53388eeb442a951"
+        fetch(url)
+            .then(function (resp) { return resp.json() })
+            .then(function (data) {
+                display(data.list);
+            })
+            .catch(function (rej) {
+                console.log(rej)
+            });
+    }
+</script>
